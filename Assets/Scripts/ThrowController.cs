@@ -5,18 +5,22 @@ using UnityEngine;
 using UnityEngine.UI;
 public class ThrowController : MonoBehaviour {
     public Slider powerIndicator;
-    private bool isThrew;
     public float maxPower;
     public Rigidbody ball;
-    public Transform throwPos;
     public Button restartButton;
+    private Vector3 originPos;
+    private Quaternion originRot;
+    private bool canThrow = true;
     private void Awake()
     {
         restartButton.gameObject.SetActive(false);
+        ball.isKinematic = true;
+        originPos = ball.transform.localPosition;
+        originRot = ball.transform.localRotation;
     }
     // Update is called once per frame
     void Update () {
-        if (isThrew)
+        if (canThrow == false)
             return;
 		if(Input.GetMouseButton(0))
         {
@@ -30,10 +34,10 @@ public class ThrowController : MonoBehaviour {
 
     public void Throw()
     {
-        isThrew = true;
+        canThrow = false;
         ball.transform.SetParent(null);
         ball.isKinematic = false;
-        ball.AddForce(throwPos.forward * maxPower * powerIndicator.normalizedValue);
+        ball.AddForce(ball.transform.forward * maxPower * powerIndicator.normalizedValue);
         Invoke("DelayShowRestartButton", 3f);
     }
 
@@ -44,6 +48,17 @@ public class ThrowController : MonoBehaviour {
 
     public void ReloadScene()
     {
-        SceneManager.LoadScene(0);
+        ball.isKinematic = true;
+        ball.transform.SetParent(transform);
+        ball.transform.localPosition = originPos;
+        ball.transform.localRotation = originRot;
+        restartButton.gameObject.SetActive(false);
+        powerIndicator.value = 0;
+        Invoke("DelayEnableThrow", 0.5f);
+    }
+
+    private void DelayEnableThrow()
+    {
+        canThrow = true;
     }
 }
